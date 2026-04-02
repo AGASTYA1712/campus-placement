@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPMS — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<div class="app">
+  <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-title">PlacePro</div>
+      <div class="logo-sub">CPMS v2.0</div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" onclick="showPage('dashboard',this)">
+        <span>▣</span> Dashboard
+      </a>
+
+      <div class="nav-section">Core</div>
+      <a class="nav-item" onclick="showPage('students',this)">
+        <span>👤</span> Students
+        <span class="nav-badge" id="navStudentCount">—</span>
+      </a>
+      <a class="nav-item" onclick="showPage('companies',this)">
+        <span>🏢</span> Companies
+      </a>
+      <a class="nav-item" onclick="showPage('drives',this)">
+        <span>📅</span> Drives
+      </a>
+      <a class="nav-item" onclick="showPage('pipeline',this)">
+        <span>⇄</span> Applications
+        <div class="notif-dot"></div>
+      </a>
+      <a class="nav-item" onclick="showPage('offers',this)">
+        <span>✦</span> Offers
+      </a>
+
+      <div class="nav-section">Account</div>
+      <a class="nav-item" onclick="logout()" style="color:var(--red)">
+        <span>↩</span> Logout
+      </a>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="sidebarAvatar">A</div>
+      <div>
+        <div class="sidebar-name" id="sidebarName">Admin</div>
+        <div class="sidebar-role" id="sidebarRole">Coordinator</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════ -->
+  <div class="main">
+
+    <!-- ─── DASHBOARD PAGE ─────────────────────────────── -->
+    <div id="page-dashboard" class="page active">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Placement Dashboard</div>
+          <div class="page-sub">Academic Year 2024–25 · Real-time data</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addStudent')">+ Add Student</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card gold">
+            <div class="stat-icon">👤</div>
+            <div class="stat-label">Registered Students</div>
+            <div class="stat-value gold" id="statTotal">—</div>
+            <div class="stat-delta">Placement rate: <span class="up" id="statPlacementRate">—</span></div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✓</div>
+            <div class="stat-label">Students Placed</div>
+            <div class="stat-value green" id="statPlaced">—</div>
+            <div class="stat-delta"><span class="up" id="statAvgCTC">—</span></div>
+          </div>
+          <div class="stat-card teal">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-label">Companies Visiting</div>
+            <div class="stat-value teal" id="statCompanies">—</div>
+            <div class="stat-delta">Active recruiters</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">₹</div>
+            <div class="stat-label">Highest CTC (LPA)</div>
+            <div class="stat-value red" id="statMaxCTC">—</div>
+            <div class="stat-delta">This season</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Department-wise Placements</div>
+            </div>
+            <div class="card-body">
+              <div class="bar-chart" id="deptChart"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Application Status</div>
+            </div>
+            <div class="card-body">
+              <div class="donut-wrap">
+                <svg width="120" height="120" viewBox="0 0 120 120" id="donutSvg"></svg>
+                <div class="donut-legend" id="donutLegend"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent offers + Top companies -->
+        <div class="two-col">
+          <div>
+            <div class="table-card">
+              <div class="table-header">
+                <div class="card-title">Recent Offers</div>
+              </div>
+              <table>
+                <thead><tr><th>Student</th><th>Company</th><th>Role</th><th>CTC (LPA)</th><th>Date</th></tr></thead>
+                <tbody id="recentOffersBody"><tr><td colspan="5" class="table-empty">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Top Companies</div></div>
+              <div class="card-body" id="topCompanies"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── STUDENTS PAGE ──────────────────────────────── -->
+    <div id="page-students" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Student Management</div>
+          <div class="page-sub" id="studentCount">Loading…</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-primary btn-sm" onclick="openModal('addStudent')">+ Add Student</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="card-title">All Students</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select class="form-control search-input" id="deptFilter" onchange="searchStudents()" style="width:130px">
+                <option value="">All Departments</option>
+                <option>CSE</option><option>IT</option><option>ECE</option>
+                <option>EEE</option><option>ME</option><option>CE</option>
+              </select>
+              <select class="form-control" id="placedFilter" onchange="searchStudents()" style="width:120px">
+                <option value="">All Status</option>
+                <option value="true">Placed</option>
+                <option value="false">Unplaced</option>
+              </select>
+              <input class="form-control search-input" id="studentSearch" placeholder="🔍  Search…" oninput="searchStudents()">
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Roll No</th><th>Name</th><th>Dept</th><th>CGPA</th>
+                <th>Skills</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentBody">
+              <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── COMPANIES PAGE ─────────────────────────────── -->
+    <div id="page-companies" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Recruiting Companies</div>
+          <div class="page-sub">All registered companies</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-primary btn-sm" onclick="openModal('addCompany')">+ Register Company</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="table-card">
+          <div class="table-header"><div class="card-title">All Companies</div></div>
+          <table>
+            <thead>
+              <tr><th>Company</th><th>Sector</th><th>Drives</th><th>Offers</th><th>Avg CTC</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="companyBody">
+              <tr><td colspan="6" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DRIVES PAGE ────────────────────────────────── -->
+    <div id="page-drives" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Placement Drives</div>
+          <div class="page-sub">All scheduled campus drives</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-primary btn-sm" onclick="openDriveModal()">+ Create Drive</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="card-title">All Drives</div>
+            <select class="form-control" style="width:140px" onchange="loadDrives(this.value)">
+              <option value="">All Status</option>
+              <option value="Upcoming">Upcoming</option>
+              <option value="Active">Active</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Company</th><th>Role</th><th>CTC Range</th><th>Drive Date</th><th>Applicants</th><th>Offers</th><th>Status</th></tr>
+            </thead>
+            <tbody id="driveBody">
+              <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PIPELINE PAGE ─────────────────────────────── -->
+    <div id="page-pipeline" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Application Pipeline</div>
+          <div class="page-sub">Kanban view of all applications</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-outline btn-sm" onclick="loadPipeline()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="pipeline">
+          <div class="pipeline-col">
+            <div class="pipeline-col-header">
+              <span class="pipeline-col-title">Applied</span>
+              <span class="pipeline-count" id="count-applied" style="color:var(--teal)">0</span>
+            </div>
+            <div id="col-applied"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col-header">
+              <span class="pipeline-col-title">Shortlisted</span>
+              <span class="pipeline-count" id="count-shortlisted" style="color:var(--gold)">0</span>
+            </div>
+            <div id="col-shortlisted"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col-header">
+              <span class="pipeline-col-title">Interview</span>
+              <span class="pipeline-count" id="count-interview" style="color:var(--text2)">0</span>
+            </div>
+            <div id="col-interview"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col-header">
+              <span class="pipeline-col-title">Offered</span>
+              <span class="pipeline-count" id="count-offered" style="color:var(--green)">0</span>
+            </div>
+            <div id="col-offered"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-col-header">
+              <span class="pipeline-col-title">Rejected</span>
+              <span class="pipeline-count" id="count-rejected" style="color:var(--red)">0</span>
+            </div>
+            <div id="col-rejected"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── OFFERS PAGE ────────────────────────────────── -->
+    <div id="page-offers" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Offer Letters</div>
+          <div class="page-sub">All placement offers this season</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div class="stat-label">Total Offers</div>
+            <div class="stat-value green" id="offerTotal">—</div>
+          </div>
+          <div class="stat-card teal">
+            <div class="stat-label">Accepted</div>
+            <div class="stat-value teal" id="offerAccepted">—</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-label">Avg CTC (LPA)</div>
+            <div class="stat-value gold" id="offerAvgCTC">—</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-label">Highest CTC (LPA)</div>
+            <div class="stat-value red" id="offerMaxCTC">—</div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="card-title">Offer Records</div></div>
+          <table>
+            <thead>
+              <tr><th>Offer ID</th><th>Student</th><th>Company</th><th>Role</th><th>CTC (LPA)</th><th>Date</th><th>Status</th></tr>
+            </thead>
+            <tbody id="offerBody">
+              <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ MODALS ════════════════════════════════════════════════ -->
+
+<!-- Add Student -->
+<div class="modal-overlay" id="modal-addStudent">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('addStudent')">✕</button>
+    <div class="modal-title">Add New Student</div>
+    <div class="modal-sub">Fill in student profile details</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <div class="form-label">Roll Number *</div>
+        <input class="form-control" id="f_student_id" placeholder="21CSE001">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Department *</div>
+        <select class="form-control" id="f_dept">
+          <option value="1">CSE</option><option value="2">IT</option>
+          <option value="3">ECE</option><option value="4">EEE</option>
+          <option value="5">ME</option><option value="6">CE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">First Name *</div>
+        <input class="form-control" id="f_first_name" placeholder="Rahul">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Last Name *</div>
+        <input class="form-control" id="f_last_name" placeholder="Sharma">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Email *</div>
+        <input class="form-control" id="f_email" type="email" placeholder="rahul@college.edu">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Phone</div>
+        <input class="form-control" id="f_phone" placeholder="9876543210">
+      </div>
+      <div class="form-group">
+        <div class="form-label">CGPA *</div>
+        <input class="form-control" id="f_cgpa" type="number" step="0.01" min="0" max="10" placeholder="8.50">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Backlogs</div>
+        <input class="form-control" id="f_backlogs" type="number" min="0" placeholder="0" value="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Year of Passing *</div>
+        <input class="form-control" id="f_year" type="number" placeholder="2025" value="2025">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Skills (comma-separated)</div>
+        <input class="form-control" id="f_skills" placeholder="Python, React, Machine Learning">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addStudent')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Company -->
+<div class="modal-overlay" id="modal-addCompany">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('addCompany')">✕</button>
+    <div class="modal-title">Register Company</div>
+    <div class="modal-sub">Add a recruiting company to the system</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <div class="form-label">Company Name *</div>
+        <input class="form-control" id="c_name" placeholder="Google India Pvt Ltd">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Sector *</div>
+        <select class="form-control" id="c_sector">
+          <option>Technology</option><option>IT Services</option>
+          <option>Finance</option><option>Core Engineering</option>
+          <option>Consulting</option><option>Analytics</option>
+          <option>Semiconductor</option><option>FMCG</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">HR Name</div>
+        <input class="form-control" id="c_hr_name" placeholder="HR Contact Name">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">HR Email *</div>
+        <input class="form-control" id="c_hr_email" type="email" placeholder="hr@company.com">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Website</div>
+        <input class="form-control" id="c_website" placeholder="https://careers.company.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addCompany')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCompany()">Register</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Drive -->
+<div class="modal-overlay" id="modal-addDrive">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('addDrive')">✕</button>
+    <div class="modal-title">Create Placement Drive</div>
+    <div class="modal-sub">Schedule a new campus drive</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <div class="form-label">Company *</div>
+        <select class="form-control" id="d_company"></select>
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Job Role *</div>
+        <input class="form-control" id="d_role" placeholder="Software Engineer">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Min CTC (LPA) *</div>
+        <input class="form-control" id="d_ctc_min" type="number" step="0.5" placeholder="12">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Max CTC (LPA) *</div>
+        <input class="form-control" id="d_ctc_max" type="number" step="0.5" placeholder="28">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Min CGPA</div>
+        <input class="form-control" id="d_min_cgpa" type="number" step="0.1" placeholder="6.5" value="6.5">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Max Backlogs</div>
+        <input class="form-control" id="d_max_backlogs" type="number" placeholder="0" value="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">Drive Date *</div>
+        <input class="form-control" id="d_drive_date" type="date">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">Eligible Departments (comma-separated)</div>
+        <input class="form-control" id="d_depts" placeholder="CSE, IT, ECE">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addDrive')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDrive()">Create Drive</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Populate company dropdown when drive modal opens
+  async function openDriveModal() {
+    const sel = document.getElementById('d_company');
+    sel.innerHTML = '<option>Loading…</option>';
+    try {
+      const { data } = await api.getCompanies();
+      sel.innerHTML = data.map(c => `<option value="${c.company_id}">${c.company_name}</option>`).join('');
+    } catch(e) { sel.innerHTML = '<option>Error loading</option>'; }
+    openModal('addDrive');
+  }
+
+  // Pipeline column id mapping (handles 'shortlisted')
+  const colMap = { Applied:'applied', Shortlisted:'shortlisted', Interview:'interview', Offered:'offered', Rejected:'rejected' };
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPMS — Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .accent-line { width: 40px; height: 3px; background: var(--gold); border-radius: 2px; margin: 12px 0 24px; }
+    .demo-hint { background: rgba(244,185,66,.08); border: 1px solid rgba(244,185,66,.2); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 11px; color: var(--text3); }
+    .demo-hint strong { color: var(--gold); }
+    .error-msg { color: var(--red); font-size: 11px; margin-top: 8px; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">PlacePro</div>
+      <div class="login-sub">College Placement Management System</div>
+      <div class="accent-line"></div>
+
+      <div class="login-tab">
+        <button class="login-tab-btn active" onclick="switchTab('admin', this)">Admin / Coordinator</button>
+        <button class="login-tab-btn" onclick="switchTab('student', this)">Student</button>
+      </div>
+
+      <!-- Admin Login -->
+      <div id="adminForm">
+        <div class="demo-hint">
+          Demo: <strong>admin@cpms.edu</strong> / <strong>password</strong>
+        </div>
+        <div class="login-field">
+          <label class="login-label" for="adminEmail">Email</label>
+          <input class="form-control" id="adminEmail" type="email" placeholder="admin@cpms.edu" value="admin@cpms.edu">
+        </div>
+        <div class="login-field">
+          <label class="login-label" for="adminPass">Password</label>
+          <input class="form-control" id="adminPass" type="password" placeholder="••••••••" value="password">
+        </div>
+        <div class="error-msg" id="adminError"></div>
+        <button class="login-submit" onclick="adminLogin()">Sign In →</button>
+      </div>
+
+      <!-- Student Login -->
+      <div id="studentForm" style="display:none">
+        <div class="login-field">
+          <label class="login-label" for="studentId">Student Roll Number</label>
+          <input class="form-control" id="studentId" type="text" placeholder="e.g. 21CSE001">
+        </div>
+        <div class="login-field">
+          <label class="login-label" for="studentPass">Password</label>
+          <input class="form-control" id="studentPass" type="password" placeholder="••••••••">
+        </div>
+        <div class="error-msg" id="studentError"></div>
+        <button class="login-submit" onclick="studentLogin()">Sign In →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (api.getToken()) window.location.href = '/index.html';
+
+    function switchTab(type, btn) {
+      document.querySelectorAll('.login-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('adminForm').style.display   = type === 'admin'   ? '' : 'none';
+      document.getElementById('studentForm').style.display = type === 'student' ? '' : 'none';
+    }
+
+    async function adminLogin() {
+      const email    = document.getElementById('adminEmail').value;
+      const password = document.getElementById('adminPass').value;
+      const errEl    = document.getElementById('adminError');
+      errEl.textContent = '';
+      try {
+        const { token, user } = await api.login(email, password);
+        api.setToken(token);
+        localStorage.setItem('cpms_user', JSON.stringify(user));
+        window.location.href = '/index.html';
+      } catch (err) { errEl.textContent = err.message; }
+    }
+
+    async function studentLogin() {
+      const student_id = document.getElementById('studentId').value;
+      const password   = document.getElementById('studentPass').value;
+      const errEl      = document.getElementById('studentError');
+      errEl.textContent = '';
+      try {
+        const { token, user } = await api.studentLogin(student_id, password);
+        api.setToken(token);
+        localStorage.setItem('cpms_user', JSON.stringify(user));
+        window.location.href = '/index.html';
+      } catch (err) { errEl.textContent = err.message; }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (!document.getElementById('adminForm').style.display) adminLogin();
+        else studentLogin();
+      }
+    });
+  </script>
+</body>
+</html>

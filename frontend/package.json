@@ -1,0 +1,13 @@
+{
+  "name": "cpms-frontend",
+  "version": "1.0.0",
+  "description": "College Placement Management System - Frontend",
+  "private": true,
+  "scripts": {
+    "start": "parcel index.html login.html",
+    "build": "parcel build index.html login.html --dist-dir dist"
+  },
+  "devDependencies": {
+    "parcel": "^2.10.3"
+  }
+}
