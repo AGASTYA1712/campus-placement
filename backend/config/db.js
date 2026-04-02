@@ -11,7 +11,9 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
-  ssl:                process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : null)
+  ssl: process.env.DB_SSL === 'true' 
+        ? { rejectUnauthorized: false } 
+        : (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : null)
 });
 
 const promisePool = pool.promise();

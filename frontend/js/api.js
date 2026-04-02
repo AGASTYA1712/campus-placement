@@ -1,5 +1,5 @@
 // js/api.js  — Centralised API client
-const BASE = 'http://localhost:5000/api';
+const BASE = (typeof process !== 'undefined' && process.env.API_URL) ? process.env.API_URL : 'http://localhost:5000/api';
 
 function getToken() { return localStorage.getItem('cpms_token'); }
 function setToken(t) { localStorage.setItem('cpms_token', t); }

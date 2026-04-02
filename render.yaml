@@ -1,0 +1,39 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: cpms-api
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        fromService:
+          name: cpms-frontend
+          type: static_site
+          property: url
+      # The user will need to add these in the Render dashboard:
+      # - DB_HOST
+      # - DB_USER
+      # - DB_PASSWORD
+      # - DB_NAME
+      # - JWT_SECRET
+
+  # Frontend Static Site
+  - type: static_site
+    name: cpms-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: API_URL
+        fromService:
+          name: cpms-api
+          type: web
+          property: url
