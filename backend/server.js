@@ -7,8 +7,32 @@ require('dotenv').config();
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://localhost:1234'
+].filter(Boolean);
+
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false 
+}));
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.endsWith('.onrender.com')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
