@@ -1,4 +1,13 @@
-const BASE = process.env.API_URL || process.env.PARCEL_API_URL || 'http://localhost:5000/api';
+let BASE = 'http://localhost:5000/api';
+try {
+  // Parcel will replace these during build if provided
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.API_URL) BASE = process.env.API_URL;
+    else if (process.env.PARCEL_API_URL) BASE = process.env.PARCEL_API_URL;
+  }
+} catch (e) {
+  console.warn('⚠️ Could not resolve API_URL from environment:', e.message);
+}
 console.log('🌐 API Base URL:', BASE);
 
 function getToken() { return localStorage.getItem('cpms_token'); }
