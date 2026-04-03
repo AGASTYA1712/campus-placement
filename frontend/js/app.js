@@ -8,12 +8,26 @@ async function initApp() {
   const userStr = localStorage.getItem('cpms_user');
   if (userStr) {
     const user = JSON.parse(userStr);
-    document.getElementById('sidebarName').textContent = user.name || user.first_name || 'Admin';
-    document.getElementById('sidebarRole').textContent = user.role || 'Coordinator';
-    document.getElementById('sidebarAvatar').textContent = (user.name || 'A')[0].toUpperCase();
+    const role = user.role || 'coordinator';
+    const isStudent = role === 'student';
+
+    document.getElementById('sidebarName').textContent = user.name || user.first_name || 'User';
+    document.getElementById('sidebarRole').textContent = isStudent ? 'Student' : (user.role || 'Coordinator');
+    document.getElementById('sidebarAvatar').textContent = (user.name || user.first_name || 'U')[0].toUpperCase();
+
+    // Toggle Sidebar Items
+    document.querySelectorAll('[data-role]').forEach(el => {
+      const elRole = el.getAttribute('data-role');
+      if (isStudent && elRole === 'admin') el.style.display = 'none';
+      if (!isStudent && elRole === 'student') el.style.display = 'none';
+    });
+
+    if (isStudent) {
+      showPage('student-dashboard');
+    } else {
+      showPage('dashboard');
+    }
   }
-  showPage('dashboard');
-  loadDashboard();
 }
 
 // ─── Navigation ────────────────────────────────────────────
@@ -25,12 +39,16 @@ function showPage(id, el) {
   if (el) el.classList.add('active');
 
   const loaders = {
-    dashboard:   loadDashboard,
-    students:    loadStudents,
-    companies:   loadCompanies,
-    drives:      loadDrives,
-    pipeline:    loadPipeline,
-    offers:      loadOffers,
+    dashboard:           loadDashboard,
+    students:            loadStudents,
+    companies:           loadCompanies,
+    drives:              loadDrives,
+    pipeline:            loadPipeline,
+    offers:              loadOffers,
+    'student-dashboard': loadStudentDashboard,
+    'available-drives':  loadAvailableDrives,
+    'my-applications':   loadMyApplications,
+    'profile':           loadProfile,
   };
   if (loaders[id]) loaders[id]();
 }
@@ -368,6 +386,87 @@ async function loadOffers() {
         <td><span class="chip ${o.accepted?'chip-green':'chip-gold'}">${o.accepted?'Accepted':'Pending'}</span></td>
       </tr>`).join('') : '<tr><td colspan="7" class="table-empty">No offers yet</td></tr>';
   } catch (err) { toast(err.message, 'error'); }
+}
+
+// ─── Student Dashboard ───────────────────────────────────────
+async function loadStudentDashboard() {
+  try {
+    const user = JSON.parse(localStorage.getItem('cpms_user'));
+    document.getElementById('studentHeader').textContent = `Welcome back, ${user.first_name}!`;
+    document.getElementById('s_statCGPA').textContent = user.cgpa;
+
+    const { data: apps } = await api.getMyApplications();
+    document.getElementById('s_statApps').textContent = apps.length;
+    document.getElementById('s_statShortlisted').textContent = apps.filter(a => ['Shortlisted', 'Interview', 'Offered'].includes(a.status)).length;
+
+    const isPlaced = apps.some(a => a.status === 'Offered');
+    document.getElementById('s_placementStatus').textContent = isPlaced ? 'Congratulations! You are placed.' : 'Currently seeking placement opportunities.';
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function loadAvailableDrives() {
+  const el = document.getElementById('availableDrivesList');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-center">Searching for drives...</div>';
+  try {
+    const { data } = await api.getEligibleDrives();
+    el.innerHTML = data.length ? data.map(d => `
+      <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:12px;padding:20px;background:var(--navy2)">
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <span class="chip chip-teal">${d.sector}</span>
+          <span style="color:var(--gold);font-weight:600">${d.ctc_min}–${d.ctc_max} LPA</span>
+        </div>
+        <div>
+          <div style="font-size:18px;font-weight:600;color:var(--text1)">${d.role}</div>
+          <div style="color:var(--text3);font-size:13px">${d.company_name}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">
+           Date: ${d.drive_date} | Min CGPA: ${d.min_cgpa}
+        </div>
+        ${d.applied ?
+          `<button class="btn btn-outline btn-sm full" disabled style="width:100%">✓ Applied</button>` :
+          `<button class="btn btn-primary btn-sm full" style="width:100%" onclick="applyForDrive(${d.drive_id})">Apply Now</button>`
+        }
+      </div>`).join('') : '<div class="table-empty">No new eligible drives found.</div>';
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function loadMyApplications() {
+  const tbody = document.getElementById('myAppsBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Loading…</td></tr>';
+  try {
+    const { data } = await api.getMyApplications();
+    const colors = { Applied:'chip-teal', Shortlisted:'chip-gold', Interview:'chip-blue', Offered:'chip-green', Rejected:'chip-red', Withdrawn:'chip-gray' };
+    tbody.innerHTML = data.length ? data.map(a => `
+      <tr>
+        <td><strong>${a.company_name}</strong></td>
+        <td>${a.role}</td>
+        <td>${a.ctc_min}–${a.ctc_max} LPA</td>
+        <td style="font-size:11px;color:var(--text3)">${a.drive_date}</td>
+        <td><span class="chip ${colors[a.status] || 'chip-gray'}">${a.status}</span></td>
+      </tr>`).join('') : '<tr><td colspan="5" class="table-empty">No applications yet</td></tr>';
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function applyForDrive(driveId) {
+  try {
+    const user = JSON.parse(localStorage.getItem('cpms_user'));
+    await api.applyToDrive({ drive_id: driveId, student_id: user.student_id });
+    toast('Application submitted successfully!');
+    loadAvailableDrives();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function loadProfile() {
+  const user = JSON.parse(localStorage.getItem('cpms_user'));
+  if (!user) return;
+  document.getElementById('p_name').textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || '—';
+  document.getElementById('p_id').textContent = user.student_id || user.admin_id || '—';
+  document.getElementById('p_email').textContent = user.email || '—';
+  document.getElementById('p_dept').textContent = user.dept_name || user.dept_code || (user.role ? 'Administration' : '—');
+  document.getElementById('p_cgpa').textContent = user.cgpa || 'N/A';
+  document.getElementById('p_backlogs').textContent = user.backlogs || 0;
 }
 
 // ─── Auth ────────────────────────────────────────────────────

@@ -34,6 +34,24 @@ router.get('/', protect, adminOnly, async (req, res) => {
   }
 });
 
+// GET /api/applications/me — student's own apps
+router.get('/me', protect, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const [rows] = await db.query(
+      `SELECT a.*, c.company_name, c.sector, d.role, d.ctc_min, d.ctc_max, d.drive_date
+       FROM applications a
+       JOIN drives d ON a.drive_id=d.drive_id
+       JOIN companies c ON d.company_id=c.company_id
+       WHERE a.student_id=?
+       ORDER BY a.applied_at DESC`, [studentId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/applications  — student applies
 router.post('/', protect, [
   body('drive_id').isInt(),

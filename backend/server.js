@@ -45,6 +45,7 @@ app.use('/api/drives',       require('./routes/drives'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/offers',       require('./routes/offers'));
 app.use('/api/analytics',    require('./routes/analytics'));
+app.use('/api/utils',        require('./routes/utils'));
 
 // ── Health check ────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));

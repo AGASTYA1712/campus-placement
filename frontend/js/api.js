@@ -39,6 +39,8 @@ const api = {
   login:         (email, password) => request('POST', '/auth/login', { email, password }),
   studentLogin:  (student_id, password) => request('POST', '/auth/student-login', { student_id, password }),
   me:            () => request('GET', '/auth/me'),
+  registerStudent: (data) => request('POST', '/auth/register-student', data),
+  registerAdmin:   (data) => request('POST', '/auth/register-admin', data),
 
   // Students
   getStudents:   (params = {}) => request('GET', '/students?' + new URLSearchParams(params)),
@@ -58,12 +60,14 @@ const api = {
 
   // Drives
   getDrives:       (params = {}) => request('GET', '/drives?' + new URLSearchParams(params)),
+  getEligibleDrives: () => request('GET', '/drives/student-eligible'),
   createDrive:     (data) => request('POST', '/drives', data),
   updateDrive:     (id, data) => request('PUT', '/drives/' + id, data),
   eligibleStudents:(id) => request('GET', '/drives/' + id + '/eligible'),
 
   // Applications
   getApplications: (params = {}) => request('GET', '/applications?' + new URLSearchParams(params)),
+  getMyApplications: () => request('GET', '/applications/me'),
   applyToDrive:    (data) => request('POST', '/applications', data),
   updateAppStatus: (id, status, remarks) => request('PUT', '/applications/' + id + '/status', { status, remarks }),
   getPipeline:     () => request('GET', '/applications/pipeline'),
@@ -83,6 +87,9 @@ const api = {
   getDashboard:   () => request('GET', '/analytics/dashboard'),
   getCTCDist:     () => request('GET', '/analytics/ctc-distribution'),
   getMonthly:     () => request('GET', '/analytics/monthly-placements'),
+
+  // Utils
+  getPublicDepartments: () => request('GET', '/utils/departments'),
 
   // Utils
   getToken, setToken, clearToken

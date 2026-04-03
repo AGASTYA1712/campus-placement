@@ -23,23 +23,38 @@
         <span>▣</span> Dashboard
       </a>
 
-      <div class="nav-section">Core</div>
-      <a class="nav-item" onclick="showPage('students',this)">
+      <div class="nav-section" data-role="admin">Core</div>
+      <a class="nav-item" data-role="admin" onclick="showPage('students',this)">
         <span>👤</span> Students
         <span class="nav-badge" id="navStudentCount">—</span>
       </a>
-      <a class="nav-item" onclick="showPage('companies',this)">
+      <a class="nav-item" data-role="admin" onclick="showPage('companies',this)">
         <span>🏢</span> Companies
       </a>
-      <a class="nav-item" onclick="showPage('drives',this)">
+      <a class="nav-item" data-role="admin" onclick="showPage('drives',this)">
         <span>📅</span> Drives
       </a>
-      <a class="nav-item" onclick="showPage('pipeline',this)">
+      <a class="nav-item" data-role="admin" onclick="showPage('pipeline',this)">
         <span>⇄</span> Applications
         <div class="notif-dot"></div>
       </a>
-      <a class="nav-item" onclick="showPage('offers',this)">
+      <a class="nav-item" data-role="admin" onclick="showPage('offers',this)">
         <span>✦</span> Offers
+      </a>
+
+      <!-- Student Nav -->
+      <div class="nav-section" data-role="student">Student Portal</div>
+      <a class="nav-item" data-role="student" onclick="showPage('student-dashboard',this)">
+        <span>▣</span> My Statistics
+      </a>
+      <a class="nav-item" data-role="student" onclick="showPage('available-drives',this)">
+        <span>🔍</span> Available Drives
+      </a>
+      <a class="nav-item" data-role="student" onclick="showPage('my-applications',this)">
+        <span>📋</span> My Applications
+      </a>
+      <a class="nav-item" data-role="student" onclick="showPage('profile',this)">
+        <span>👤</span> My Profile
       </a>
 
       <div class="nav-section">Account</div>
@@ -146,6 +161,119 @@
           </div>
         </div>
 
+      </div>
+    </div>
+    <!-- ─── STUDENT DASHBOARD PAGE ──────────────────── -->
+    <div id="page-student-dashboard" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Student Dashboard</div>
+          <div class="page-sub" id="studentHeader">Welcome back!</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats-grid">
+          <div class="stat-card teal">
+            <div class="stat-icon">📝</div>
+            <div class="stat-label">Applications</div>
+            <div class="stat-value teal" id="s_statApps">0</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✓</div>
+            <div class="stat-label">Shortlisted</div>
+            <div class="stat-value green" id="s_statShortlisted">0</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-label">My CGPA</div>
+            <div class="stat-value gold" id="s_statCGPA">0.0</div>
+          </div>
+        </div>
+        <div class="two-col">
+           <div class="card">
+             <div class="card-header"><div class="card-title">Placement Status</div></div>
+             <div class="card-body" id="s_placementStatus">Currently seeking placement.</div>
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── AVAILABLE DRIVES PAGE ────────────────────── -->
+    <div id="page-available-drives" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Available Placement Drives</div>
+          <div class="page-sub">Drives matching your profile</div>
+        </div>
+      </div>
+      <div class="content">
+         <div class="stats-grid" id="availableDrivesList">
+           <!-- Job Cards -->
+         </div>
+      </div>
+    </div>
+
+    <!-- ─── MY APPLICATIONS PAGE ─────────────────────── -->
+    <div id="page-my-applications" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">My Applications</div>
+          <div class="page-sub">Track your progress</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Company</th><th>Role</th><th>CTC</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="myAppsBody"><tr><td colspan="5" class="table-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROFILE PAGE ────────────────────────────── -->
+    <div id="page-profile" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">My Profile</div>
+          <div class="page-sub">View your academic details</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card" style="max-width:600px">
+          <div class="card-header"><div class="card-title">Personal Information</div></div>
+          <div class="card-body">
+            <div class="form-grid">
+               <div class="form-group">
+                 <div class="form-label">Full Name</div>
+                 <div id="p_name" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">—</div>
+               </div>
+               <div class="form-group">
+                 <div class="form-label">Roll Number</div>
+                 <div id="p_id" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">—</div>
+               </div>
+               <div class="form-group">
+                 <div class="form-label">Email</div>
+                 <div id="p_email" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">—</div>
+               </div>
+               <div class="form-group">
+                 <div class="form-label">Department</div>
+                 <div id="p_dept" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">—</div>
+               </div>
+               <div class="form-group">
+                 <div class="form-label">CGPA</div>
+                 <div id="p_cgpa" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">0.0</div>
+               </div>
+               <div class="form-group">
+                 <div class="form-label">Backlogs</div>
+                 <div id="p_backlogs" style="padding:10px;background:var(--navy3);border-radius:6px;color:var(--text1)">0</div>
+               </div>
+            </div>
+            <div style="margin-top:20px;font-size:12px;color:var(--text3)">
+              Note: Contact the Placement Coordinator to update your academic records.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

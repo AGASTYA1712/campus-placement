@@ -28,6 +28,36 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// GET /api/drives/student-eligible  (Student View)
+router.get('/student-eligible', protect, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const [[student]] = await db.query(
+      'SELECT s.cgpa, s.backlogs, d.dept_code FROM students s JOIN departments d ON s.department_id=d.department_id WHERE s.student_id=?',
+      [studentId]
+    );
+
+    if (!student) return res.status(404).json({ success: false, message: 'Student profile not found' });
+
+    const [rows] = await db.query(
+      `SELECT d.*, c.company_name, c.sector,
+              (SELECT COUNT(*) FROM applications WHERE drive_id=d.drive_id AND student_id=?) AS applied
+       FROM drives d
+       JOIN companies c ON d.company_id=c.company_id
+       WHERE d.status IN ('Upcoming', 'Active')
+         AND d.min_cgpa <= ?
+         AND d.max_backlogs >= ?
+         AND (d.dept_eligible IS NULL OR d.dept_eligible = '[]' OR JSON_CONTAINS(d.dept_eligible, JSON_QUOTE(?)))
+       ORDER BY d.drive_date ASC`,
+      [studentId, student.cgpa, student.backlogs, student.dept_code]
+    );
+
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/drives/:id/eligible-students
 router.get('/:id/eligible', protect, adminOnly, async (req, res) => {
   try {

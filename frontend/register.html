@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPMS — Register</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .accent-line { width: 40px; height: 3px; background: var(--gold); border-radius: 2px; margin: 12px 0 24px; }
+    .error-msg { color: var(--red); font-size: 11px; margin-top: 8px; min-height: 16px; }
+    .login-card { max-width: 500px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .full-width { grid-column: span 2; }
+    .login-submit { margin-top: 24px; }
+    .back-link { display: block; text-align: center; margin-top: 16px; font-size: 13px; color: var(--text3); text-decoration: none; transition: color 0.2s; }
+    .back-link:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">PlacePro</div>
+      <div class="login-sub">Create your account to get started</div>
+      <div class="accent-line"></div>
+
+      <div class="login-tab">
+        <button class="login-tab-btn active" onclick="switchTab('student', this)">Student Signup</button>
+        <button class="login-tab-btn" onclick="switchTab('admin', this)">Admin Signup</button>
+      </div>
+
+      <!-- Student Register -->
+      <div id="studentForm">
+        <div class="form-grid">
+          <div class="login-field">
+            <label class="login-label">Roll Number</label>
+            <input class="form-control" id="s_id" type="text" placeholder="21CSE001">
+          </div>
+          <div class="login-field">
+            <label class="login-label">Email</label>
+            <input class="form-control" id="s_email" type="email" placeholder="student@edu.com">
+          </div>
+          <div class="login-field">
+            <label class="login-label">First Name</label>
+            <input class="form-control" id="s_first" type="text" placeholder="John">
+          </div>
+          <div class="login-field">
+            <label class="login-label">Last Name</label>
+            <input class="form-control" id="s_last" type="text" placeholder="Doe">
+          </div>
+          <div class="login-field">
+            <label class="login-label">Department</label>
+            <select class="form-control" id="s_dept">
+              <option value="">Select Dept</option>
+            </select>
+          </div>
+          <div class="login-field">
+            <label class="login-label">CGPA</label>
+            <input class="form-control" id="s_cgpa" type="number" step="0.01" placeholder="9.5">
+          </div>
+          <div class="login-field">
+             <label class="login-label">Passing Year</label>
+             <input class="form-control" id="s_year" type="number" placeholder="2025">
+          </div>
+          <div class="login-field">
+            <label class="login-label">Password</label>
+            <input class="form-control" id="s_pass" type="password" placeholder="••••••••">
+          </div>
+        </div>
+        <div class="error-msg" id="studentError"></div>
+        <button class="login-submit" onclick="registerStudent()">Create Student Account →</button>
+      </div>
+
+      <!-- Admin Register -->
+      <div id="adminForm" style="display:none">
+        <div class="login-field">
+          <label class="login-label">Full Name</label>
+          <input class="form-control" id="a_name" type="text" placeholder="Dr. Smith">
+        </div>
+        <div class="login-field">
+          <label class="login-label">Email</label>
+          <input class="form-control" id="a_email" type="email" placeholder="admin@cpms.edu">
+        </div>
+        <div class="login-field">
+          <label class="login-label">Secret Admin Code</label>
+          <input class="form-control" id="a_code" type="password" placeholder="Registration Secret">
+        </div>
+        <div class="login-field">
+          <label class="login-label">Password</label>
+          <input class="form-control" id="a_pass" type="password" placeholder="••••••••">
+        </div>
+        <div class="error-msg" id="adminError"></div>
+        <button class="login-submit" onclick="registerAdmin()">Create Admin Account →</button>
+      </div>
+
+      <a href="login.html" class="back-link">Already have an account? Sign In</a>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', loadDepts);
+
+    async function loadDepts() {
+      try {
+        const { data } = await api.getPublicDepartments();
+        const sel = document.getElementById('s_dept');
+        data.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.department_id;
+          opt.textContent = `${d.dept_code} - ${d.dept_name}`;
+          sel.appendChild(opt);
+        });
+      } catch (e) { console.error('Failed to load depts', e); }
+    }
+
+    function switchTab(type, btn) {
+      document.querySelectorAll('.login-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('studentForm').style.display = type === 'student' ? '' : 'none';
+      document.getElementById('adminForm').style.display   = type === 'admin'   ? '' : 'none';
+    }
+
+    async function registerStudent() {
+      const errEl = document.getElementById('studentError');
+      errEl.textContent = '';
+      const data = {
+        student_id:      document.getElementById('s_id').value,
+        email:           document.getElementById('s_email').value,
+        first_name:      document.getElementById('s_first').value,
+        last_name:       document.getElementById('s_last').value,
+        department_id:   parseInt(document.getElementById('s_dept').value),
+        cgpa:            parseFloat(document.getElementById('s_cgpa').value),
+        year_of_passing: parseInt(document.getElementById('s_year').value),
+        password:        document.getElementById('s_pass').value
+      };
+
+      try {
+        await api.registerStudent(data);
+        alert('Registration successful! Please login.');
+        window.location.href = 'login.html';
+      } catch (err) { errEl.textContent = err.message; }
+    }
+
+    async function registerAdmin() {
+      const errEl = document.getElementById('adminError');
+      errEl.textContent = '';
+      const data = {
+        name:       document.getElementById('a_name').value,
+        email:      document.getElementById('a_email').value,
+        admin_code: document.getElementById('a_code').value,
+        password:   document.getElementById('a_pass').value
+      };
+
+      try {
+        await api.registerAdmin(data);
+        alert('Admin registration successful! Please login.');
+        window.location.href = 'login.html';
+      } catch (err) { errEl.textContent = err.message; }
+    }
+  </script>
+</body>
+</html>
